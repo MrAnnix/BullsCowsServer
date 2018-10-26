@@ -1,55 +1,44 @@
-import select
-import socket
-import sys
-import signal
-from communication import send, receive
+import socket, select, sys, signal
+from communication import send, receive, broadcast
 
-BUFSIZ = 1024
+class Server(object):
 
-
-class ChatServer(object):
-    """ Simple chat server using select """
-
-    def __init__(self, port=3490, backlog=5):
+    def __init__(self, port=8085, backlog=5):
+        # Number of clients
         self.clients = 0
-        # Client map
-        self.clientmap = {}
-        # Output socket list
-        self.outputs = []
+        # Client info storage
+        self.clientinfo = {}
+        # For the socket descriptors
+        self.connectionlist = []
+        # Passive socket creation
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.server.bind(('', port))
-        print('Listening to port', port, '...')
+        self.server.bind(("0.0.0.0", port))
         self.server.listen(backlog)
-        # Trap keyboard interrupts
+        #print('Listening to port', port, '...')
+        # Handling signals
         signal.signal(signal.SIGINT, self.sighandler)
 
     def sighandler(self, signum, frame):
-        # Close the server
-        print('Shutting down server...')
-        # Close existing client sockets
-        for o in self.outputs:
+        #print('Shutting down server...')
+        # Close all existing client sockets
+        for o in self.connectionlist:
             o.close()
 
         self.server.close()
 
-    def getname(self, client):
-
-        # Return the printable name of the
-        # client, given its socket...
-        info = self.clientmap[client]
-        host, name = info[0][0], info[1]
-        return '@'.join((name, host))
+    def getinfo(self, client):
+        info = self.clientinfo[client]
+        host, id = info[0][0], info[1]
+        return '@'.join((id, host))
 
     def serve(self):
-
         inputs = [self.server, sys.stdin]
         self.outputs = []
 
         running = 1
 
         while running:
-
             try:
                 inputready, outputready, exceptready = select.select(inputs, self.outputs, [])
             except:
