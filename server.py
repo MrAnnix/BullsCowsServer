@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import socket, select, sys, signal
+import socket, select, sys, signal, numpy as np
 from communication import send, receive
 
 class Server(object):
