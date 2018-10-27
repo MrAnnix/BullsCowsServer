@@ -1,10 +1,13 @@
+#!/usr/bin/env python
+
 import socket, select, sys, signal
-from communication import send, receive, broadcast
+from communication import send, receive
 
 class Server(object):
 
     def __init__(self, port=8085, backlog=5):
         # Number of clients
+        self.id = 0
         self.clients = 0
         # Client info storage
         self.clientinfo = {}
@@ -22,17 +25,31 @@ class Server(object):
     def sighandler(self, signum, frame):
         #print('Shutting down server...')
         # Close all existing client sockets
-        for o in self.connectionlist:
-            o.close()
+        for aux in self.connectionlist:
+            aux.close()
 
         self.server.close()
 
-    def getinfo(self, client):
+    def login(self, client):
         info = self.clientinfo[client]
         host, id = info[0][0], info[1]
         return '@'.join((id, host))
 
-    def serve(self):
+    def loginack(self, client):
+
+    def newgame(self, client):
+
+    def newgameack(self,client):
+
+    def guess(self, client):
+
+    def guessack(self,client):
+
+    def quit(self, client):
+
+    def quitack(self, client):
+
+    def play(self):
         inputs = [self.server, sys.stdin]
         self.outputs = []
 
@@ -40,14 +57,14 @@ class Server(object):
 
         while running:
             try:
-                inputready, outputready, exceptready = select.select(inputs, self.outputs, [])
+                infds, outfds, errfds = select.select(inputs, self.outputs, [])
             except:
                 break
 
-            for s in inputready:
+            for s in infds:
 
                 if s == self.server:
-                    # handle the server socket
+                    # Server socket
                     client, address = self.server.accept()
                     print('chatserver: got connection %d from %s' % (client.fileno(), address))
                     # Read the login name

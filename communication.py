@@ -5,6 +5,7 @@ import struct
 marshall = pickle.dumps
 unmarshall = pickle.loads
 
+def login(client):
 
 def send(channel, *args):
     buf = marshall(args)
@@ -12,20 +13,6 @@ def send(channel, *args):
     size = struct.pack("L", value)
     channel.send(size)
     channel.send(buf)
-
-def broadcast(channel, *args):
-    buf = marshall(args)
-    value = socket.htonl(len(buf))
-    size = struct.pack("L", value)
-    channel.send(size)
-    channel.send(buf)
-    for socket in connectionlist:
-        if socket != server_socket and socket != sock:
-            try:
-                socket.send(message)
-            except:
-                socket.close()
-                CONNECTION_LIST.remove(socket)
 
 def receive(channel):
     size = struct.calcsize("L")
