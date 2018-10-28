@@ -3,6 +3,14 @@
 import socket, select, sys, signal, numpy as np
 from communication import send, receive
 
+class Message():
+    def __init__(self, messageID, messageType, fromID, toID, payload):
+        self.mID = messageID
+        self.mType = messageType
+        self.fID = fromID
+        self.tID = toID
+        self.payload = payload
+
 class Server(object):
 
     def __init__(self, port=8085, backlog=5):
