@@ -11,7 +11,7 @@ class Message():
         self.tID = toID
         self.payload = payload
 
-class Server(object):
+class Server():
 
     def __init__(self, port=8085, backlog=5):
         # Number of clients
