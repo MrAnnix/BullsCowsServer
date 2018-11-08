@@ -20,7 +20,6 @@ GUESSACK = 0x13
 QUIT = 0x04
 QUITACK = 0x14
 QUIT_OK = 0x00
-ERROR = 0x13
 
 class Message():
     def __init__(self, messageID, messageType, fromID, toID, payload):
@@ -35,7 +34,7 @@ class BullsAndCows():
         self.secret = ''.join(random.choice(string.digits)for _ in range(4))
 
 class Server():
-    def __init__(self, port=8085, backlog=5):
+    def __init__(self, port, backlog):
         # Number of clients
         self.id = 0
         self.clients = 0
@@ -108,7 +107,7 @@ class Server():
     def quitack(self, client):
         r=3
 
-    def play(self):
+    def serve(self):
         inputs = [self.server, sys.stdin]
         self.outputs = []
 
@@ -182,5 +181,6 @@ class Server():
 
 
 if __name__ == "__main__":
-    #ChatServer().serve()
+    newServer = Server(8888, 100)
+    newServer.serve()
     r=3
