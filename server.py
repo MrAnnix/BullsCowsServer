@@ -1,7 +1,26 @@
 #!/usr/bin/env python
 
-import socket, select, sys, signal, numpy as np
-from communication import send, receive
+import random, string, socket, select, sys, signal, numpy as np
+#from communication import send, receive
+
+#Constants
+LOGIN = 0x01
+LOGINACK = 0x11
+ID_OK = 0x00
+ID_USED = 0x11
+ID_OUTOFRANGE = 0x12
+ERROR = 0x13
+
+NEWGAME = 0x02
+NEWGAMEACK = 0x12
+
+GUESS = 0x03
+GUESSACK = 0x13
+
+QUIT = 0x04
+QUITACK = 0x14
+QUIT_OK = 0x00
+ERROR = 0x13
 
 class Message():
     def __init__(self, messageID, messageType, fromID, toID, payload):
@@ -11,8 +30,11 @@ class Message():
         self.tID = toID
         self.payload = payload
 
-class Server():
+class BullsAndCows():
+    def __init__(self):
+        self.secret = ''.join(random.choice(string.digits)for _ in range(4))
 
+class Server():
     def __init__(self, port=8085, backlog=5):
         # Number of clients
         self.id = 0
@@ -66,18 +88,25 @@ class Server():
         return '@'.join((id, host))
 
     def loginack(self, client):
+        r=3
 
     def newgame(self, client):
+        r=3
 
-    def newgameack(self,client):
+    def newgameack(self, client):
+        r=3
 
     def guess(self, client):
+        r=3
 
-    def guessack(self,client):
+    def guessack(self, client):
+        r=3
 
     def quit(self, client):
+        r=3
 
     def quitack(self, client):
+        r=3
 
     def play(self):
         inputs = [self.server, sys.stdin]
@@ -153,4 +182,5 @@ class Server():
 
 
 if __name__ == "__main__":
-    ChatServer().serve()
+    #ChatServer().serve()
+    r=3
