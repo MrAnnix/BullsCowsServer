@@ -1,25 +1,6 @@
 #!/usr/bin/env python
 
-import bullsandcows, socket, select, sys, signal#, numpy as np
-#from communication import send, receive
-
-#Constants
-LOGIN = 0x01
-LOGINACK = 0x11
-ID_OK = 0x00
-ID_USED = 0x11
-ID_OUTOFRANGE = 0x12
-ERROR = 0x13
-
-NEWGAME = 0x02
-NEWGAMEACK = 0x12
-
-GUESS = 0x03
-GUESSACK = 0x13
-
-QUIT = 0x04
-QUITACK = 0x14
-QUIT_OK = 0x00
+import bullsandcows, communications, socket, select, sys, signal, struct#, numpy as np
 
 class Message():
     def __init__(self, messageID, messageType, fromID, toID, payload):
@@ -54,54 +35,6 @@ class Server():
             aux.close()
 
         self.server.close()
-
-    def send(channel, *args):
-        buf = marshall(args)
-        value = socket.htonl(len(buf))
-        size = struct.pack("L", value)
-        channel.send(size)
-        channel.send(buf)
-
-    def receive(channel):
-        size = struct.calcsize("L")
-        size = channel.recv(size)
-        try:
-            size = socket.ntohl(struct.unpack("L", size)[0])
-        except:
-            return ''
-
-        buf = ""
-
-        while len(buf) < size:
-            buf = channel.recv(size - len(buf))
-
-        return unmarshall(buf)[0]
-
-    def login(self, client):
-        info = self.clientinfo[client]
-        host, id = info[0][0], info[1]
-        return '@'.join((id, host))
-
-    def loginack(self, client):
-        r=3
-
-    def newgame(self, client):
-        r=3
-
-    def newgameack(self, client):
-        r=3
-
-    def guess(self, client):
-        r=3
-
-    def guessack(self, client):
-        r=3
-
-    def quit(self, client):
-        r=3
-
-    def quitack(self, client):
-        r=3
 
     def serve(self):
         inputs = [self.server, sys.stdin]
@@ -177,5 +110,8 @@ class Server():
 
 
 if __name__ == "__main__":
-    newServer = Server(8888, 100)
-    newServer.serve()
+    #newServer = Server(8888, 100)
+    #newServer.serve()
+    r = b'\xff\x00\x00\x00\x07\x00\x00\x00@\x00\x00\x00\xff\x03\x00\x00Hola'
+    mId, mType, mFrom, mTo, mPayload = struct.unpack('ihii'+str(len(r)-16)+'s', r)
+    print(mPayload)
