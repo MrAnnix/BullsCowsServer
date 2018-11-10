@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import bullsandcows, communications, socket, selectors, types, sys, signal, struct#, numpy as np
+import bullsandcows, communications, socket, selectors, types, sys, signal, struct
 
 class Server():
     def __init__(self, port, backlog):
@@ -62,8 +62,9 @@ class Server():
 
 
 if __name__ == "__main__":
-    newServer = Server(8888, 100)
-    newServer.serve()
-    r = b'\xff\x00\x00\x00\x07\x00\x00\x00@\x00\x00\x00\xff\x03\x00\x00Hola'
+    #newServer = Server(8888, 100)
+    #newServer.serve()
+    r = b'x\x00\x00\x00x\x00\x00\x00x\x00\x00\x00x\x00\x00\x00Hola'
+    print(len(r))
     mId, mType, mFrom, mTo, mPayload = struct.unpack('ihii'+str(len(r)-16)+'s', r)
     print(mPayload)

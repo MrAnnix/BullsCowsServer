@@ -3,8 +3,8 @@
 import random, string
 
 class BullsAndCows():
-    def __init__(self):
-        self.__secret = ''.join(random.choice(string.digits) for _ in range(4))
+    def __init__(self, size):
+        self.__secret = ''.join(random.choice(string.digits) for _ in range(size))
 
     def compare(self, guess):
         if len(guess) != len(self.__secret):
