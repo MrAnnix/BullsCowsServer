@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import random, string, socket, select, sys, signal#, numpy as np
+import bullsandcows, socket, select, sys, signal#, numpy as np
 #from communication import send, receive
 
 #Constants
@@ -28,13 +28,6 @@ class Message():
         self.fID = fromID
         self.tID = toID
         self.payload = payload
-
-class BullsAndCows():
-    def __init__(self):
-        self.secret = ''.join(random.choice(string.digits)for _ in range(4))
-        
-    def guess():
-        return 0
 
 class Server():
     def __init__(self, port, backlog):
