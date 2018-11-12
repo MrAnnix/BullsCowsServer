@@ -2,31 +2,69 @@
 
 import socket, selectors, sys, io, json, struct
 
-#Constants
-LOGIN = 0x01
-LOGINACK = 0x11
-ID_OK = 0x00
-ID_USED = 0x11
-ID_OUTOFRANGE = 0x12
-ERROR = 0x13
+#We have to avoid constant changes
+def constant(f):
+    def fset(self, value):
+        raise TypeError
+    def fget(self):
+        return f()
+    return property(fget, fset)
 
-NEWGAME = 0x02
-NEWGAMEACK = 0x12
+class _Message():
+    # Constants
+    @constant
+    def LOGIN():
+        return 0x01
 
-GUESS = 0x03
-GUESSACK = 0x13
+    @constant
+    def LOGINACK():
+        return 0x11
 
-QUIT = 0x04
-QUITACK = 0x14
-QUIT_OK = 0x00
+    @constant
+    def ID_OK():
+        return 0x00
 
-"""class Message():
-    def __init__(self, messageID, messageType, fromID, toID, payload):
-        self.mID = messageID
-        self.mType = messageType
-        self.fID = fromID
-        self.tID = toID
-        self.payload = payload"""
+    @constant
+    def ID_USED():
+        return 0x11
+
+    @constant
+    def ID_OUTOFRANGE():
+        return 0x12
+
+    @constant
+    def ERROR():
+        return 0x13
+
+    @constant
+    def NEWGAME():
+        return 0x02
+
+    @constant
+    def NEWGAMEACK():
+        0x12
+
+    @constant
+    def GUESS():
+        return 0x03
+
+    @constant
+    def GUESSACK():
+        return 0x13
+
+    @constant
+    def QUIT():
+        return 0x04
+
+    @constant
+    def QUITACK():
+        return 0x14
+
+    @constant
+    def QUIT_OK():
+        return 0x00
+
+MESSAGE = _Message()
 
 class Message:
     def __init__(self, selector, sock, addr):
