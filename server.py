@@ -27,8 +27,8 @@ class Server():
         conn, addr = sock.accept()  # Should be ready to read
         print("accepted connection from", addr)
         conn.setblocking(False)
-        message = communications.Communication(self.sel, conn, addr)
-        self.sel.register(conn, selectors.EVENT_READ, data=message)
+        message = communications.Comunication(self.sel, conn, addr)
+        self.sel.register(conn, selectors.EVENT_READ | selectors.EVENT_WRITE, data=message)
 
     def sighandler(self, signum, frame):
         #print('Shutting down server...')
@@ -64,7 +64,10 @@ class Server():
 if __name__ == "__main__":
     #newServer = Server(8888, 100)
     #newServer.serve()
-    r = b'x\x00\x00\x00x\x00\x00\x00x\x00\x00\x00x\x00\x00\x00Hola'
+    r = struct.pack('!ihiih',33,25,56,1,6566)
     print(len(r))
-    mId, mType, mFrom, mTo, mPayload = struct.unpack('ihii'+str(len(r)-16)+'s', r)
-    print(mPayload)
+    if len(r) == 14:
+        mId, mType, mFrom, mTo = struct.unpack('!ihii',r)
+    else:
+        mId, mType, mFrom, mTo, mPayload = struct.unpack('!ihiih', r)
+    print('Ox%X' % mPayload)
