@@ -64,6 +64,8 @@ class Server():
 if __name__ == "__main__":
     #newServer = Server(8888, 100)
     #newServer.serve()
+    print(communications.MESSAGE.GUESS)
+    communications.MESSAGE.GUESS = 15
     r = struct.pack('!ihiih',33,25,56,1,6566)
     print(len(r))
     if len(r) == 14:
