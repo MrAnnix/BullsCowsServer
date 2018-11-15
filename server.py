@@ -51,7 +51,7 @@ class Server():
                         try:
                             self.message.process_events(mask)
                         except Exception:
-                            message.close()
+                            self.message.close()
 
         finally:
             self.sel.close()
