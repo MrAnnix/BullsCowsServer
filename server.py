@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+#BASED ON this grat tutoril: https://realpython.com/python-sockets
+
 import bullsandcows, communications, socket, selectors, types, sys, signal, struct
 
 class Server():
@@ -26,10 +28,10 @@ class Server():
         conn, addr = sock.accept()  # Should be ready to read
         print("accepted connection from", addr)
         conn.setblocking(False)
-        message = communications.Comunication(self.sel, conn, addr)
+        self.message = communications.Comunication(self.sel, conn, addr)
         self.sel.register(conn, selectors.EVENT_READ | selectors.EVENT_WRITE, data=message)
 
-    def sighandler(self, signum, frame):
+    def sighandler(self, signum, frame):#Better than treat as a KeyboardInterrupt
         # Close all existing client sockets
         for asocket in self.events:
             try:
@@ -42,12 +44,12 @@ class Server():
             while True:
                 self.events = self.sel.select(timeout=None)
                 for key, mask in self.events:
-                    if key.data is None:
+                    if key.data is None:#The connection is from the psocket
                         self.accept_wrapper(key.fileobj)
-                    else:
-                        message = key.data
+                    else:#Already accepted connection, just copy the content
+                        self.message = key.data
                         try:
-                            message.process_events(mask)
+                            self.message.process_events(mask)
                         except Exception:
                             message.close()
 

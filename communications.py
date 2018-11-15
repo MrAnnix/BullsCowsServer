@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+#BASED ON this grat tutoril: https://realpython.com/python-sockets
+
 import socket, selectors, sys, io, json, struct
 
 #We have to avoid constant changes
@@ -77,20 +79,8 @@ class Message:
         self.mType = 0
         self.fID = 0
         self.tID = 0
-        self.payload = b''
-        self.error = 0x00
-
-    def _set_selector_events_mask(self, mode):
-        """Set selector to listen for events: mode is 'r', 'w', or 'rw'."""
-        if mode == "r":
-            events = selectors.EVENT_READ
-        elif mode == "w":
-            events = selectors.EVENT_WRITE
-        elif mode == "rw":
-            events = selectors.EVENT_READ | selectors.EVENT_WRITE
-        else:
-            raise ValueError(f"Invalid events mask mode {repr(mode)}.")
-        self.selector.modify(self.sock, events, data=self)
+        self.payload = 0
+        self.error = 0
 
     def _read(self):
         try:
@@ -119,18 +109,6 @@ class Message:
                 # Close when the buffer is drained. The response has been sent.
                 if sent and not self._send_buffer:
                     self.close()
-
-    def _create_message(self, *, content_bytes, content_type, content_encoding):
-        jsonheader = {
-            "byteorder": sys.byteorder,
-            "content-type": content_type,
-            "content-encoding": content_encoding,
-            "content-length": len(content_bytes),
-        }
-        jsonheader_bytes = self._json_encode(jsonheader, "utf-8")
-        message_hdr = struct.pack(">H", len(jsonheader_bytes))
-        message = message_hdr + jsonheader_bytes + content_bytes
-        return message
 
     def process_events(self, mask):
         if mask & selectors.EVENT_READ:
@@ -173,4 +151,3 @@ class Message:
         finally:
             # Delete reference to socket object for garbage collection
             self.sock = None
-
