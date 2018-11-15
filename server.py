@@ -3,20 +3,19 @@
 import bullsandcows, communications, socket, selectors, types, sys, signal, struct
 
 class Server():
-    def __init__(self, port, backlog):
+    def __init__(self, port):
         self.sel = selectors.DefaultSelector()
         # Number of clients
-        self.id = 0
         self.clients = 0
-        # Client info storage
+        # Client info storage {socket_descriptor:(ID & ADDRESS)...}
         self.clientinfo = {}
         # For the socket descriptors
         self.connectionlist = []
         # Passive socket creation
         self.psock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.psock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.psock.bind(("0.0.0.0", port))
-        self.psock.listen(backlog)
+        self.psock.bind(('0.0.0.0', port))
+        self.psock.listen()
         self.psock.setblocking(False)
         self.sel.register(self.psock, selectors.EVENT_READ, data=None)
         #print('Listening to port', port, '...')
@@ -31,18 +30,18 @@ class Server():
         self.sel.register(conn, selectors.EVENT_READ | selectors.EVENT_WRITE, data=message)
 
     def sighandler(self, signum, frame):
-        #print('Shutting down server...')
         # Close all existing client sockets
-        for aux in self.connectionlist:
-            aux.close()
+        for asocket in self.events:
+            try:
+                asocket.fileobject.close()
 
-        self.server.close()
+        self.psock.close()
 
     def serve(self):
         try:
             while True:
-                events = self.sel.select(timeout=None)
-                for key, mask in events:
+                self.events = self.sel.select(timeout=None)
+                for key, mask in self.events:
                     if key.data is None:
                         self.accept_wrapper(key.fileobj)
                     else:
@@ -50,13 +49,8 @@ class Server():
                         try:
                             message.process_events(mask)
                         except Exception:
-                            print(
-                                "main: error: exception for",
-                                #f"{message.addr}:\n{traceback.format_exc()}",
-                            )
                             message.close()
-        except KeyboardInterrupt:
-            print("caught keyboard interrupt, exiting")
+
         finally:
             self.sel.close()
 

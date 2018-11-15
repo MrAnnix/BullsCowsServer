@@ -165,22 +165,11 @@ class Message:
         self._write()
 
     def close(self):
-        print("closing connection to", self.addr)
         try:
             self.selector.unregister(self.sock)
-        except Exception as e:
-            print(
-                f"error: selector.unregister() exception for",
-                f"{self.addr}: {repr(e)}",
-            )
 
         try:
             self.sock.close()
-        except OSError as e:
-            print(
-                f"error: socket.close() exception for",
-                f"{self.addr}: {repr(e)}",
-            )
         finally:
             # Delete reference to socket object for garbage collection
             self.sock = None
