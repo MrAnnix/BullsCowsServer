@@ -2,7 +2,7 @@
 
 #BASED ON this grat tutoril: https://realpython.com/python-sockets
 
-import socket, selectors, sys, io, json, struct
+import socket, selectors, sys, struct
 
 #We have to avoid constant changes
 def constant(f):
@@ -68,6 +68,9 @@ class _Message():
 
 MESSAGE = _Message()
 
+class NoValidMessage(Exception):
+    pass
+
 class Message:
     def __init__(self, selector, sock, addr):
         self.selector = selector
@@ -86,23 +89,21 @@ class Message:
         try:
             # Should be ready to read
             data = self.sock.recv(18)#No more data is needed max_size = 4B+2B+4B+4B+4B
-        except BlockingIOError:
+        except BlockingIOError as e:
+            print('Error: %s' % str(e[1]))
             # Resource temporarily unavailable (errno EWOULDBLOCK)
             pass
         else:
             if data:
                 self._recv_buffer += data
             else:
-                raise RuntimeError("Peer closed.")
+                raise RuntimeError('Peer closed by ' + str(self.addr[0]) + ':' + str(self.addr[1]))
 
     def _write(self):
         if self._send_buffer:
-            print("sending", repr(self._send_buffer), "to", self.addr)
-            try:
-                # Should be ready to write
+            try:# Should be ready to write
                 sent = self.sock.send(self._send_buffer)
-            except BlockingIOError:
-                # Resource temporarily unavailable (errno EWOULDBLOCK)
+            except BlockingIOError:# Resource temporarily unavailable (errno EWOULDBLOCK)
                 pass
             else:
                 self._send_buffer = self._send_buffer[sent:]
@@ -119,35 +120,37 @@ class Message:
     def read(self):
         self._read()
         if len(self._recv_buffer) == 14:
-            mId, mType, mFrom, mTo = struct.unpack('!ihii', self._recv_buffer)
+            mId, mType, mFrom, mTo = struct.unpack('!IHII', self._recv_buffer)
         elif len(self._recv_buffer) == 16:
-            mId, mType, mFrom, mTo, mPayload = struct.unpack('!ihiih', self._recv_buffer)
+            mId, mType, mFrom, mTo, mPayload = struct.unpack('!IHIIH', self._recv_buffer)
             self.payload = mPayload
         elif len(self._recv_buffer) == 18:
-            mId, mType, mFrom, mTo, mPayload = struct.unpack('!ihiii', self._recv_buffer)
+            mId, mType, mFrom, mTo, mPayload = struct.unpack('!IHIII', self._recv_buffer)
             self.payload = mPayload
         else:
             self.error = 0x13
-            return
+            raise NoValidMessage('No valid message received from ' + str(self.addr[0]) + ':' + str(self.addr[1]))
 
+        print('Size: %i' % len(self._recv_buffer))
         self.mID = mId
         self.mType = mType
         self.fID = mFrom
         self.tID = mTo
 
     def write(self):
-        if self.request:
-            if not self.response_created:
-                self.create_response()
+        #If something to send
 
         self._write()
 
     def close(self):
         try:
             self.selector.unregister(self.sock)
-
+        except:
+            print('Error: %s' % sys.exc_info()[0])
         try:
             self.sock.close()
+        except:
+            print('Error: %s' % sys.exc_info()[0])
         finally:
             # Delete reference to socket object for garbage collection
             self.sock = None
