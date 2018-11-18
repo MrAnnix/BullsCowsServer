@@ -174,7 +174,7 @@ class Server():
         elif mymsg.mType == MESSAGE.GUESS:
             for client in self.clients:
                 if (client.id == mymsg.fID) and (client.asock is mymsg.sock): #Probably, it is our client, but I want also check the psock
-                    self.guessACK(client.guessgame(mymsg.payload), mymsg.payload, len(str(mymsg.payload)))
+                    self.guessACK(client.guessgame(mymsg.payload), mymsg.payload, client.length)
                     return
             raise ClientErr('Cannot Guess: Client with id %i is not loged yet' % mymsg.fID)
         elif mymsg.mType == MESSAGE.QUIT:
@@ -208,7 +208,7 @@ class Server():
                                                     MESSAGE.GAME_OK)
 
     def guessACK(self, BnC, guess, size):
-        print('Tried: %i and gotten %i bulls and %i cows' % (guess, BnC[0], BnC[1]))
+        print('Client %i has tried: %i and gotten %i bulls and %i cows' % (self.message.fID, guess, BnC[0], BnC[1]))
         if BnC == [size, 0]:#win
             self.message._send_buffer = struct.pack('!IHIIIIIB', self.message.mID, MESSAGE.GUESSACK, 0,
                                                     self.message.fID, guess, BnC[0], BnC[1], 1)
