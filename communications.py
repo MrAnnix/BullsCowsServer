@@ -56,7 +56,7 @@ class Message:
         elif mode == "rw":
             events = selectors.EVENT_READ | selectors.EVENT_WRITE
         else:
-            raise ValueError(f"Invalid events mask mode {repr(mode)}.")
+            raise ValueError('Invalid events mask mode')
         self.selector.modify(self.sock, events, data=self)
 
     def process_events(self, mask):

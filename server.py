@@ -115,6 +115,7 @@ class Server():
         self.clients = []
         #The message temporary variable
         self.message = None
+        self.events = None
         # Passive socket creation
         self.psock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.psock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -137,14 +138,14 @@ class Server():
         self.sel.register(conn, events, data=self.message)
 
     def sighandler(self, signum, frame):#Better than treat as a KeyboardInterrupt
-        # Close all existing client sockets
-        for key, mask in self.events:
-            try:
-                key.fileobject.close()
-            except:
-                print('Error: %s' % traceback.format_exc())
-        #Close the listening socket
-        self.sel.close()
+        try:
+            # Close all existing client sockets
+            self.sel.close()#To be reviewed
+            # Close the listening socket
+            self.psock.close()
+        except Exception as e:
+            print(str(e))
+        sys.exit(-1)
 
     def process_msg(self):
         mymsg = self.message
@@ -208,10 +209,11 @@ class Server():
                                                     MESSAGE.GAME_OK)
 
     def guessACK(self, BnC, guess, size):
-        print('Client %i has tried: %i and gotten %i bulls and %i cows' % (self.message.fID, guess, BnC[0], BnC[1]))
+        #print('Client %i has tried: %i and gotten %i bulls and %i cows' % (self.message.fID, guess, BnC[0], BnC[1]))
         if BnC == [size, 0]:#win
             self.message._send_buffer = struct.pack('!IHIIIIIB', self.message.mID, MESSAGE.GUESSACK, 0,
                                                     self.message.fID, guess, BnC[0], BnC[1], 1)
+            print('Client %i wins' % self.message.fID)
         else:
             self.message._send_buffer = struct.pack('!IHIIIIIB', self.message.mID, MESSAGE.GUESSACK, 0,
                                                     self.message.fID, guess, BnC[0], BnC[1], 0)
@@ -223,8 +225,8 @@ class Server():
     def serve(self):
         try:
             while True:
-                events = self.sel.select(timeout=None)
-                for key, mask in events:
+                self.events = self.sel.select(timeout=None)
+                for key, mask in self.events:
                     if key.data is None:#The connection is from the psocket and has to be accepted
                         self.wrap_accept(key.fileobj)
                     else:#Already accepted connection, just copy the content
@@ -236,16 +238,14 @@ class Server():
                                 self.process_msg()
                                 self.message._set_selector_events_mask('w')
                         except Exception as msg:
-                            print('Error: %s' % str(msg))
+                            print(str(msg))
                             for client in self.clients:# If there was a problem, close connection, and delete from clients
                                 if client.asock is self.message.sock:
                                     self.clients.remove(client)
                                     break
                             self.message.close()
-                            #raise
-        except:#Unspected exception
-            #print('Error: %s' % traceback.format_exc())
-            raise
+        except Exception as e:
+            print(str(e))
         finally:
             self.sel.close()
 
