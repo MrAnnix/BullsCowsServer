@@ -145,7 +145,9 @@ class Server():
         events = selectors.EVENT_READ  # First we have to read
         self.sel.register(conn, events, data=self.message)
 
-    def signal_handler(self, signum, frame):  # Better than treat as a KeyboardInterrupt
+    def signal_handler(self, signum, frame):
+        # Better than treat as a KeyboardInterrupt
+        # (You have more ways to get a SIGINT signal for example "kill -s INT <pid>")
         if signum == signal.SIGINT:
             try:
                 # Close all existing client sockets
