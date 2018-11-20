@@ -273,7 +273,7 @@ class Server():
                                     break
                             self.message.close()
         except:  # Not expected exception
-            print('Error: %s' % sys.exc_info()[0])
+            print('Error hey: %s' % sys.exc_info()[0])
         finally:
             self.sel.close()
 
