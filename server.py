@@ -155,7 +155,7 @@ class Server():
             except Exception as e:
                 print(str(e))
             print('Closing server SIGINT received')
-            sys.exit(0)
+            sys.exit(-1)
 
     def process_msg(self):
         mymsg = self.message
