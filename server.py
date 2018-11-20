@@ -272,8 +272,8 @@ class Server():
                                     self.clients.remove(client)
                                     break
                             self.message.close()
-        #except SystemExit:  # If SystemExit do nothing, this is done to avoid catching it in the nex except clause
-         #   pass
+        except SystemExit:  # If SystemExit do nothing, this is done to avoid catching it in the nex except clause
+           pass
         except:  # Not expected exception
             print("Unexpected error:", sys.exc_info()[0])
         finally:
