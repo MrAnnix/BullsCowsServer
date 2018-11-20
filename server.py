@@ -155,7 +155,7 @@ class Server():
             except Exception as e:
                 print(str(e))
             print('Closing server SIGINT received')
-            #sys.exit(-1)
+            sys.exit(0)  # Raises a SystemExit exception
 
     def process_msg(self):
         mymsg = self.message
@@ -272,7 +272,10 @@ class Server():
                                     self.clients.remove(client)
                                     break
                             self.message.close()
-        except:  # Not expected exception
+        #except SystemExit:  # If SystemExit do nothing, this is done to avoid catching it in the nex except clause
+         #   pass
+        except as e:  # Not expected exception
+            print(str(e))
             print('Error hey: %s' % sys.exc_info()[0])
         finally:
             print('Closing passive socket')
