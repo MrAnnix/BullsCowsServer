@@ -164,26 +164,31 @@ class Server():
             self.loginACK()
         elif mymsg.mType == MESSAGE.NEWGAME:
             if (mymsg.payload > 5) or (mymsg.payload < 3):
-                self.newGameACK(True)
+                self.newGameERR(True)
                 return
             for client in self.clients:
                 if (client.id == mymsg.fID) and (client.asock is mymsg.sock): #Probably, it is our client, but I want also check the psock
                     client.newgame(mymsg.payload)
-                    self.newGameACK(False)
+                    self.newGameACK()
                     return
+            self.newGameERR(False)
+            self.message._write() #Force error notification before exception and socket close
             raise ClientErr('Cannot Play: Client with id %i is not loged yet' % mymsg.fID)
         elif mymsg.mType == MESSAGE.GUESS:
             for client in self.clients:
                 if (client.id == mymsg.fID) and (client.asock is mymsg.sock): #Probably, it is our client, but I want also check the psock
                     self.guessACK(client.guessgame(mymsg.payload), mymsg.payload, client.length)
                     return
+            self.guessACK([0, 0], 0, 0)
+            self.message._write()  # Force response before exception and socket close
             raise ClientErr('Cannot Guess: Client with id %i is not loged yet' % mymsg.fID)
         elif mymsg.mType == MESSAGE.QUIT:
             for client in self.clients:
                 if (client.id == mymsg.fID) and (client.asock is mymsg.sock): #Probably, it is our client, but I want also check the psock
                     self.quitACK()
-                    print('Client with id %i has left the game' % mymsg.fID)
                     return
+            self.quitERR()
+            self.message._write()  # Force error notification before exception and socket close
             raise ClientErr('Cannot quit: Client with id %i is not loged yet' % mymsg.fID)
         else:
             raise ClientErr('No valid request from client %i' % mymsg.fID)
@@ -200,16 +205,20 @@ class Server():
             self.message._send_buffer = struct.pack('!IHIIH', self.message.mID, MESSAGE.LOGINACK, 0, self.message.fID,
                                                     MESSAGE.ID_USED)
 
-    def newGameACK(self, out):
+    def newGameACK(self):
+        self.message._send_buffer = struct.pack('!IHIIH', self.message.mID, MESSAGE.NEWGAMEACK, 0, self.message.fID,
+                                                MESSAGE.GAME_OK)
+
+    def newGameERR(self, out):
         if out:
             self.message._send_buffer = struct.pack('!IHIIH', self.message.mID, MESSAGE.NEWGAMEACK, 0, self.message.fID,
                                                     MESSAGE.LENGTHOUTOFRANGE)
         else:
             self.message._send_buffer = struct.pack('!IHIIH', self.message.mID, MESSAGE.NEWGAMEACK, 0, self.message.fID,
-                                                    MESSAGE.GAME_OK)
+                                                    MESSAGE.ERROR)
 
     def guessACK(self, BnC, guess, size):
-        #print('Client %i has tried: %i and gotten %i bulls and %i cows' % (self.message.fID, guess, BnC[0], BnC[1]))
+        print('Client %i has tried: %i and gotten %i bulls and %i cows' % (self.message.fID, guess, BnC[0], BnC[1]))
         if BnC == [size, 0]:#win
             self.message._send_buffer = struct.pack('!IHIIIIIB', self.message.mID, MESSAGE.GUESSACK, 0,
                                                     self.message.fID, guess, BnC[0], BnC[1], 1)
@@ -219,8 +228,13 @@ class Server():
                                                     self.message.fID, guess, BnC[0], BnC[1], 0)
 
     def quitACK(self):
+        print('Client with id %i has left the game' % self.message.fID)
         self.message._send_buffer = struct.pack('!IHIIH', self.message.mID, MESSAGE.QUITACK, 0, self.message.fID,
                                                 MESSAGE.QUIT_OK)
+
+    def quitERR(self):
+        self.message._send_buffer = struct.pack('!IHIIH', self.message.mID, MESSAGE.QUITACK, 0, self.message.fID,
+                                                MESSAGE.ERROR)
 
     def serve(self):
         try:

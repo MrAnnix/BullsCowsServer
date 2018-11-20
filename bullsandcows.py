@@ -10,7 +10,7 @@ class BullsAndCows():
             rnd = random.choice(digits)
             self.__secret += rnd
             digits.remove(rnd)
-        print(self.__secret)
+        print('The secret number is: %s' % self.__secret)
 
     def compare(self, guess):
         bullscows = [0, 0]
