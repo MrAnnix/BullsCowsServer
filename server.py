@@ -272,8 +272,10 @@ class Server():
                                     self.clients.remove(client)
                                     break
                             self.message.close()
-        except Exception as e:  # Not expected exception
-            print(str(e))
+        except KeyboardInterrupt:  # CTRL-C Managed by the signal handler
+            pass
+        except:  # Not expected exception
+            print('Error hey: %s' % sys.exc_info()[0])
         finally:
             self.sel.close()
 
