@@ -155,7 +155,7 @@ class Server():
             except Exception as e:
                 print(str(e))
             print('Closing server SIGINT received')
-            sys.exit(-1)
+            #sys.exit(-1)
 
     def process_msg(self):
         mymsg = self.message
@@ -272,8 +272,6 @@ class Server():
                                     self.clients.remove(client)
                                     break
                             self.message.close()
-        except KeyboardInterrupt:  # CTRL-C Managed by the signal handler
-            raise
         except:  # Not expected exception
             print('Error hey: %s' % sys.exc_info()[0])
         finally:
