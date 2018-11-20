@@ -1,16 +1,19 @@
 #!/usr/bin/env python
 
-#BASED ON this great tutoril: https://realpython.com/python-sockets
+#  BASED ON this great tutorial: https://realpython.com/python-sockets
 
-import socket, selectors, types, sys, signal, struct, traceback, communications, bullsandcows
+import socket, selectors, sys, signal, struct, communications, bullsandcows
 
-#We have to avoid constant changes
-def constant(f):
+
+def constant(f):  # We want to avoid accidental constant changes
     def fset(self, value):
         raise TypeError
+
     def fget(self):
         return f()
+
     return property(fget, fset)
+
 
 class _Constants():
     # Constants
@@ -74,10 +77,13 @@ class _Constants():
     def QUIT_OK():
         return 0x00
 
+
 MESSAGE = _Constants()
+
 
 class ClientErr(Exception):
     pass
+
 
 class ClientInfo():
     id = None
@@ -104,9 +110,10 @@ class ClientInfo():
             self.id = ID
             self.address = addr
             self.asock = sock
-            print('Client with id %i has loged in' % ID)
+            print('Client with id %i has logged in' % ID)
         else:
-            raise ClientErr('Cannot login: Client with ID %i, is already loged in' % id)
+            raise ClientErr('Cannot login: Client with ID %i, is already logged in' % id)
+
 
 class Server():
     def __init__(self, port):
@@ -118,33 +125,33 @@ class Server():
         # The pending events
         self.events = None
         # Passive socket creation
-        self.psock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.psock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.p_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.p_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
-            self.psock.bind(('0.0.0.0', port))
+            self.p_sock.bind(('0.0.0.0', port))
         except socket.error as msg:
             print('Error: %s' % str(msg))
             sys.exit()
-        self.psock.listen()
-        self.psock.setblocking(False)
-        self.sel.register(self.psock, selectors.EVENT_READ, data=None)
+        self.p_sock.listen()
+        self.p_sock.setblocking(False)
+        self.sel.register(self.p_sock, selectors.EVENT_READ, data=None)
         # Handling signals
-        signal.signal(signal.SIGINT, self.sighandler)
+        signal.signal(signal.SIGINT, self.signal_handler)
 
     def wrap_accept(self, sock):
         conn, addr = sock.accept()  # Should be ready to read
         conn.setblocking(False)
         self.message = communications.Message(self.sel, conn, addr)
-        events = selectors.EVENT_READ # First we have to read
+        events = selectors.EVENT_READ  # First we have to read
         self.sel.register(conn, events, data=self.message)
 
-    def sighandler(self, signum, frame):  # Better than treat as a KeyboardInterrupt
+    def signal_handler(self, signum, frame):  # Better than treat as a KeyboardInterrupt
         if signum == signal.SIGINT:
             try:
                 # Close all existing client sockets
                 self.sel.close()  # To be reviewed
                 # Close the listening socket
-                self.psock.close()
+                self.p_sock.close()
             except Exception as e:
                 print(str(e))
             print('Closing server SIGINT received')
@@ -154,56 +161,56 @@ class Server():
         mymsg = self.message
         if mymsg.mType == MESSAGE.LOGIN:
             if (mymsg.fID == 0) or (mymsg.fID > 200):
-                self.loginERR(True)
+                self.login_err(True)
                 return
             newclient = ClientInfo()
             newclient.login(mymsg.fID, mymsg.addr, mymsg.sock)
             if self.clients:
                 for client in self.clients:  # Looking if the id is used
                     if client.id == mymsg.fID:
-                        self.loginERR(False)
+                        self.login_err(False)
                         return
             self.clients.append(newclient)
-            self.loginACK()
+            self.login_ack()
         elif mymsg.mType == MESSAGE.NEWGAME:
             if (mymsg.payload > 5) or (mymsg.payload < 3):
-                self.newGameERR(True)
+                self.new_game_err(True)
                 return
             for client in self.clients:
-                # Probably, it is our client, but we want also check the psock to avoid spoofing
+                # Probably, it is our client, but we want also check the p_sock to avoid spoofing
                 if (client.id == mymsg.fID) and (client.asock is mymsg.sock):
                     client.newgame(mymsg.payload)
-                    self.newGameACK()
+                    self.new_game_ack()
                     return
-            self.newGameERR(False)
-            self.message._write()  # Force error notification before exception and socket close
-            raise ClientErr('Cannot Play: Client with id %i is not loged yet' % mymsg.fID)
+            self.new_game_err(False)
+            self.message.write()  # Force error notification before exception and socket close
+            raise ClientErr('Cannot Play: Client with id %i is not logged yet' % mymsg.fID)
         elif mymsg.mType == MESSAGE.GUESS:
             for client in self.clients:
-                # Probably, it is our client, but we want also check the psock to avoid spoofing
+                # Probably, it is our client, but we want also check the p_sock to avoid spoofing
                 if (client.id == mymsg.fID) and (client.asock is mymsg.sock):
-                    self.guessACK(client.guessgame(mymsg.payload), mymsg.payload, client.length)
+                    self.guess_ack(client.guessgame(mymsg.payload), mymsg.payload, client.length)
                     return
-            self.guessACK([0, 0], 0, 0)
-            self.message._write()  # Force response before exception and socket close
-            raise ClientErr('Cannot Guess: Client with id %i is not loged yet' % mymsg.fID)
+            self.guess_ack([0, 0], 0, 0)
+            self.message.write()  # Force response before exception and socket close
+            raise ClientErr('Cannot Guess: Client with id %i is not logged yet' % mymsg.fID)
         elif mymsg.mType == MESSAGE.QUIT:
             for client in self.clients:
-                # Probably, it is our client, but we want also check the psock to avoid spoofing
+                # Probably, it is our client, but we want also check the p_sock to avoid spoofing
                 if (client.id == mymsg.fID) and (client.asock is mymsg.sock):
-                    self.quitACK()
+                    self.quit_ack()
                     return
-            self.quitERR()
-            self.message._write()  # Force error notification before exception and socket close
-            raise ClientErr('Cannot quit: Client with id %i is not loged yet' % mymsg.fID)
+            self.quit_err()
+            self.message.write()  # Force error notification before exception and socket close
+            raise ClientErr('Cannot quit: Client with id %i is not logged yet' % mymsg.fID)
         else:
             raise ClientErr('No valid request from client %i' % mymsg.fID)
 
-    def loginACK(self):
+    def login_ack(self):
         self.message._send_buffer = struct.pack('!IHIIH', self.message.mID, MESSAGE.LOGINACK, 0, self.message.fID,
                                                 MESSAGE.ID_OK)
 
-    def loginERR(self, out):
+    def login_err(self, out):
         if out:
             self.message._send_buffer = struct.pack('!IHIIH', self.message.mID, MESSAGE.LOGINACK, 0, self.message.fID,
                                                     MESSAGE.ID_OUTOFRANGE)
@@ -211,11 +218,11 @@ class Server():
             self.message._send_buffer = struct.pack('!IHIIH', self.message.mID, MESSAGE.LOGINACK, 0, self.message.fID,
                                                     MESSAGE.ID_USED)
 
-    def newGameACK(self):
+    def new_game_ack(self):
         self.message._send_buffer = struct.pack('!IHIIH', self.message.mID, MESSAGE.NEWGAMEACK, 0, self.message.fID,
                                                 MESSAGE.GAME_OK)
 
-    def newGameERR(self, out):
+    def new_game_err(self, out):
         if out:
             self.message._send_buffer = struct.pack('!IHIIH', self.message.mID, MESSAGE.NEWGAMEACK, 0, self.message.fID,
                                                     MESSAGE.LENGTHOUTOFRANGE)
@@ -223,22 +230,22 @@ class Server():
             self.message._send_buffer = struct.pack('!IHIIH', self.message.mID, MESSAGE.NEWGAMEACK, 0, self.message.fID,
                                                     MESSAGE.ERROR)
 
-    def guessACK(self, BnC, guess, size):
-        print('Client %i has tried: %i and gotten %i bulls and %i cows' % (self.message.fID, guess, BnC[0], BnC[1]))
-        if BnC == [size, 0]:#win
+    def guess_ack(self, bnc, guess, size):
+        print('Client %i has tried: %i and gotten %i bulls and %i cows' % (self.message.fID, guess, bnc[0], bnc[1]))
+        if bnc == [size, 0]:  # Client has won
             self.message._send_buffer = struct.pack('!IHIIIIIB', self.message.mID, MESSAGE.GUESSACK, 0,
-                                                    self.message.fID, guess, BnC[0], BnC[1], 1)
+                                                    self.message.fID, guess, bnc[0], bnc[1], 1)
             print('Client %i wins' % self.message.fID)
         else:
             self.message._send_buffer = struct.pack('!IHIIIIIB', self.message.mID, MESSAGE.GUESSACK, 0,
-                                                    self.message.fID, guess, BnC[0], BnC[1], 0)
+                                                    self.message.fID, guess, bnc[0], bnc[1], 0)
 
-    def quitACK(self):
+    def quit_ack(self):
         print('Client with id %i has left the game' % self.message.fID)
         self.message._send_buffer = struct.pack('!IHIIH', self.message.mID, MESSAGE.QUITACK, 0, self.message.fID,
                                                 MESSAGE.QUIT_OK)
 
-    def quitERR(self):
+    def quit_err(self):
         self.message._send_buffer = struct.pack('!IHIIH', self.message.mID, MESSAGE.QUITACK, 0, self.message.fID,
                                                 MESSAGE.ERROR)
 
@@ -247,7 +254,7 @@ class Server():
             while True:
                 self.events = self.sel.select(timeout=None)
                 for key, mask in self.events:
-                    if key.data is None:  # The connection is from the psocket and has to be accepted
+                    if key.data is None:  # The connection is from the passive socket and has to be accepted
                         self.wrap_accept(key.fileobj)
                     else:  # Already accepted connection, just copy the content
                         self.message = key.data
@@ -256,7 +263,7 @@ class Server():
                             # Now process the message
                             if mask & selectors.EVENT_READ:
                                 self.process_msg()
-                                self.message._set_selector_events_mask('w')
+                                self.message.set_selector_events_mask('w')
                         except Exception as msg:
                             print(str(msg))
                             # If there was a problem, close connection, and delete from clients
@@ -265,8 +272,8 @@ class Server():
                                     self.clients.remove(client)
                                     break
                             self.message.close()
-        except Exception as e:
-            print(str(e))
+        except:  # Not expected exception
+            print('Error: %s' % sys.exc_info()[0])
         finally:
             self.sel.close()
 

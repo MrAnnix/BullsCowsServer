@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import random, string
+import random
 
 class BullsAndCows():
     def __init__(self, size):
@@ -13,10 +13,10 @@ class BullsAndCows():
         print('The secret number is: %s' % self.__secret)
 
     def compare(self, guess):
-        bullscows = [0, 0]
+        bulls_cows = [0, 0]
         for i in range(len(self.__secret)):
             if guess[i] == self.__secret[i]:
-                bullscows[0]+=1;
+                bulls_cows[0]+=1;
             elif guess[i] in self.__secret:
-                bullscows[1]+=1;
-        return bullscows
+                bulls_cows[1]+=1;
+        return bulls_cows

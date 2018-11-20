@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-#BASED ON this grat tutoril: https://realpython.com/python-sockets
+#  BASED ON this grat tutoril: https://realpython.com/python-sockets
 
 import socket, selectors, sys, struct
 
@@ -23,8 +23,8 @@ class Message:
 
     def _read(self):
         try:
-            data = self.sock.recv(32)# No more data is needed max_size = 4B+2B+4B+4B+4B = 18B so 2^5 = 32
-        except BlockingIOError as e:# Resource temporarily unavailable (errno EWOULDBLOCK)
+            data = self.sock.recv(32)  # No more data is needed max_size = 4B+2B+4B+4B+4B = 18B so 2^5 = 32
+        except BlockingIOError as e:  # Resource temporarily unavailable (errno EWOULDBLOCK)
             print('Error: %s' % str(e))
             pass
         else:
@@ -35,10 +35,10 @@ class Message:
 
     def _write(self):
         if self._send_buffer:
-            try:# Should be ready to write
+            try:  # Should be ready to write
                 sent = self.sock.send(self._send_buffer)
-                self._set_selector_events_mask('r')
-            except BlockingIOError as e:#Resource temporarily unavailable (errno EWOULDBLOCK)
+                self.set_selector_events_mask('r')
+            except BlockingIOError as e:  # Resource temporarily unavailable (errno EWOULDBLOCK)
                 print('Error: %s' % str(e))
                 pass
             else:
@@ -47,7 +47,7 @@ class Message:
                 else:
                     raise RuntimeError('Peer closed by ' + str(self.addr[0]) + ':' + str(self.addr[1]))
 
-    def _set_selector_events_mask(self, mode):
+    def set_selector_events_mask(self, mode):
         """Set selector to listen for events: mode is 'r', 'w', or 'rw'."""
         if mode == "r":
             events = selectors.EVENT_READ
