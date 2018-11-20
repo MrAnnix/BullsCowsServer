@@ -273,7 +273,7 @@ class Server():
                                     break
                             self.message.close()
         except KeyboardInterrupt:  # CTRL-C Managed by the signal handler
-            pass
+            raise
         except:  # Not expected exception
             print('Error hey: %s' % sys.exc_info()[0])
         finally:
