@@ -275,8 +275,7 @@ class Server():
         #except SystemExit:  # If SystemExit do nothing, this is done to avoid catching it in the nex except clause
          #   pass
         except:  # Not expected exception
-            e = sys.exc_info()[0]
-            print('Error: %s' % str(e))
+            print("Unexpected error:", sys.exc_info()[0])
         finally:
             print('Closing passive socket')
             self.sel.close()
