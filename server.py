@@ -275,6 +275,7 @@ class Server():
         except:  # Not expected exception
             print('Error hey: %s' % sys.exc_info()[0])
         finally:
+            print('Closing passive socket')
             self.sel.close()
 
 
