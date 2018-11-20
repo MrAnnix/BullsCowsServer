@@ -82,7 +82,7 @@ class ClientErr(Exception):
 class ClientInfo():
     id = None
     address = None
-    asock = None
+    asock = None  # The active socket file descriptor is unique for every client
     game = None
     length = 0
 
@@ -113,8 +113,9 @@ class Server():
         self.sel = selectors.DefaultSelector()
         # Client info storage
         self.clients = []
-        #The message temporary variable
+        # The message actual message to be processed
         self.message = None
+        # The pending events
         self.events = None
         # Passive socket creation
         self.psock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -134,18 +135,20 @@ class Server():
         conn, addr = sock.accept()  # Should be ready to read
         conn.setblocking(False)
         self.message = communications.Message(self.sel, conn, addr)
-        events = selectors.EVENT_READ | selectors.EVENT_WRITE
+        events = selectors.EVENT_READ # First we have to read
         self.sel.register(conn, events, data=self.message)
 
-    def sighandler(self, signum, frame):#Better than treat as a KeyboardInterrupt
-        try:
-            # Close all existing client sockets
-            self.sel.close()#To be reviewed
-            # Close the listening socket
-            self.psock.close()
-        except Exception as e:
-            print(str(e))
-        sys.exit(-1)
+    def sighandler(self, signum, frame):  # Better than treat as a KeyboardInterrupt
+        if signum == signal.SIGINT:
+            try:
+                # Close all existing client sockets
+                self.sel.close()  # To be reviewed
+                # Close the listening socket
+                self.psock.close()
+            except Exception as e:
+                print(str(e))
+            print('Closing server SIGINT received')
+            sys.exit(0)
 
     def process_msg(self):
         mymsg = self.message
@@ -156,7 +159,7 @@ class Server():
             newclient = ClientInfo()
             newclient.login(mymsg.fID, mymsg.addr, mymsg.sock)
             if self.clients:
-                for client in self.clients:#Looking if the id is used
+                for client in self.clients:  # Looking if the id is used
                     if client.id == mymsg.fID:
                         self.loginERR(False)
                         return
@@ -167,16 +170,18 @@ class Server():
                 self.newGameERR(True)
                 return
             for client in self.clients:
-                if (client.id == mymsg.fID) and (client.asock is mymsg.sock): #Probably, it is our client, but I want also check the psock
+                # Probably, it is our client, but we want also check the psock to avoid spoofing
+                if (client.id == mymsg.fID) and (client.asock is mymsg.sock):
                     client.newgame(mymsg.payload)
                     self.newGameACK()
                     return
             self.newGameERR(False)
-            self.message._write() #Force error notification before exception and socket close
+            self.message._write()  # Force error notification before exception and socket close
             raise ClientErr('Cannot Play: Client with id %i is not loged yet' % mymsg.fID)
         elif mymsg.mType == MESSAGE.GUESS:
             for client in self.clients:
-                if (client.id == mymsg.fID) and (client.asock is mymsg.sock): #Probably, it is our client, but I want also check the psock
+                # Probably, it is our client, but we want also check the psock to avoid spoofing
+                if (client.id == mymsg.fID) and (client.asock is mymsg.sock):
                     self.guessACK(client.guessgame(mymsg.payload), mymsg.payload, client.length)
                     return
             self.guessACK([0, 0], 0, 0)
@@ -184,7 +189,8 @@ class Server():
             raise ClientErr('Cannot Guess: Client with id %i is not loged yet' % mymsg.fID)
         elif mymsg.mType == MESSAGE.QUIT:
             for client in self.clients:
-                if (client.id == mymsg.fID) and (client.asock is mymsg.sock): #Probably, it is our client, but I want also check the psock
+                # Probably, it is our client, but we want also check the psock to avoid spoofing
+                if (client.id == mymsg.fID) and (client.asock is mymsg.sock):
                     self.quitACK()
                     return
             self.quitERR()
@@ -241,19 +247,20 @@ class Server():
             while True:
                 self.events = self.sel.select(timeout=None)
                 for key, mask in self.events:
-                    if key.data is None:#The connection is from the psocket and has to be accepted
+                    if key.data is None:  # The connection is from the psocket and has to be accepted
                         self.wrap_accept(key.fileobj)
-                    else:#Already accepted connection, just copy the content
+                    else:  # Already accepted connection, just copy the content
                         self.message = key.data
                         try:
                             self.message.process_events(mask)
-                            #Now process the message
+                            # Now process the message
                             if mask & selectors.EVENT_READ:
                                 self.process_msg()
                                 self.message._set_selector_events_mask('w')
                         except Exception as msg:
                             print(str(msg))
-                            for client in self.clients:# If there was a problem, close connection, and delete from clients
+                            # If there was a problem, close connection, and delete from clients
+                            for client in self.clients:
                                 if client.asock is self.message.sock:
                                     self.clients.remove(client)
                                     break
