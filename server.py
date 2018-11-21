@@ -85,14 +85,14 @@ class ClientErr(Exception):
     pass
 
 
-class ClientInfo():
+class ClientInfo:
     id = None
     address = None
     asock = None  # The active socket file descriptor is unique for every client
     game = None
     length = 0
 
-    def newgame(self, size):
+    def new_game(self, size):
         if self.game is None:
             self.game = bullsandcows.BullsAndCows(size)
             self.length = size
@@ -100,7 +100,7 @@ class ClientInfo():
         else:
             raise ClientErr('Cannot play: Client with ID: %i, is already playing' % self.id)
 
-    def guessgame(self, guess):
+    def guess_game(self, guess):
         if self.game is None:
             raise ClientErr('Cannot guess:Client with id %i is not playing' % self.id)
         return self.game.compare(str(guess).zfill(self.length))
@@ -115,7 +115,7 @@ class ClientInfo():
             raise ClientErr('Cannot login: Client with ID %i, is already logged in' % id)
 
 
-class Server():
+class Server:
     def __init__(self, port):
         self.sel = selectors.DefaultSelector()
         # Client info storage
@@ -181,7 +181,7 @@ class Server():
             for client in self.clients:
                 # Probably, it is our client, but we want also check the p_sock to avoid spoofing
                 if (client.id == mymsg.fID) and (client.asock is mymsg.sock):
-                    client.newgame(mymsg.payload)
+                    client.new_game(mymsg.payload)
                     self.new_game_ack()
                     return
             self.new_game_err(False)
@@ -191,7 +191,7 @@ class Server():
             for client in self.clients:
                 # Probably, it is our client, but we want also check the p_sock to avoid spoofing
                 if (client.id == mymsg.fID) and (client.asock is mymsg.sock):
-                    self.guess_ack(client.guessgame(mymsg.payload), mymsg.payload, client.length)
+                    self.guess_ack(client.guess_game(mymsg.payload), mymsg.payload, client.length)
                     return
             self.guess_ack([0, 0], 0, 0)
             self.message.write()  # Force response before exception and socket close
