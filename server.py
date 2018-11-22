@@ -147,7 +147,6 @@ class Server:
 
     def signal_handler(self, signum, frame):
         # Better than treat as a KeyboardInterrupt
-        # (You have more ways to get a SIGINT signal for example "kill -s INT <pid>")
         if signum == signal.SIGINT:
             try:
                 # Close all existing client sockets
@@ -201,6 +200,9 @@ class Server:
                 # Probably, it is our client, but we want also check the p_sock to avoid spoofing
                 if (client.id == mymsg.fID) and (client.asock is mymsg.sock):
                     self.quit_ack()
+                    self.message.write()  # Force response before exception and socket close
+                    # Lanzamos excepcion y directamente cerramos el socket eliminando al cliente de la lista
+                    raise ClientErr('Client with id %i has left the game' % self.message.fID)
                     return
             self.quit_err()
             self.message.write()  # Force error notification before exception and socket close
@@ -243,7 +245,6 @@ class Server:
                                                     self.message.fID, guess, bnc[0], bnc[1], 0)
 
     def quit_ack(self):
-        print('Client with id %i has left the game' % self.message.fID)
         self.message._send_buffer = struct.pack('!IHIIH', self.message.mID, MESSAGE.QUITACK, 0, self.message.fID,
                                                 MESSAGE.QUIT_OK)
 
@@ -268,13 +269,13 @@ class Server:
                                 self.message.set_selector_events_mask('w')
                         except Exception as msg:
                             print(str(msg))
-                            # If there was a problem, close connection, and delete from clients
+                            # If there was a problem or the client want to quit, close connection, and delete it from clients
                             for client in self.clients:
                                 if client.asock is self.message.sock:
                                     self.clients.remove(client)
                                     break
                             self.message.close()
-        except SystemExit:  # If SystemExit do nothing, this is done to avoid catching it in the nex except clause
+        except SystemExit:  # If SystemExit exception -> do nothing, this is done to avoid catching it in the nex except clause
            pass
         except:  # Not expected exception
             print("Unexpected error:", sys.exc_info()[0])

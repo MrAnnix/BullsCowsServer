@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-#  BASED ON this grat tutoril: https://realpython.com/python-sockets
+#  BASED ON this grat tutorial: https://realpython.com/python-sockets
 
 import socket, selectors, sys, struct
 
@@ -19,7 +19,6 @@ class Message:
         self.fID = 0
         self.tID = 0
         self.payload = 0
-        self.status = 0
 
     def _read(self):
         try:
