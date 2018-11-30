@@ -2,7 +2,9 @@
 
 #  BASED ON this grat tutorial: https://realpython.com/python-sockets
 
-import socket, selectors, sys, struct
+import selectors
+import sys
+import struct
 
 class NoValidMessage(Exception):
     pass

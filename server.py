@@ -2,7 +2,13 @@
 
 #  BASED ON this great tutorial: https://realpython.com/python-sockets
 
-import socket, selectors, sys, signal, struct, communications, bullsandcows
+import socket
+import selectors
+import sys
+import signal
+import struct
+import communications
+import bullsandcows
 
 
 def constant(f):  # We want to avoid accidental constant changes
