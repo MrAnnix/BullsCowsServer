@@ -291,5 +291,24 @@ class Server:
 
 
 if __name__ == '__main__':
-    newServer = Server(8888)
+    def print_help():
+        print("Usage: python3 %s [PORT]\n" % sys.argv[1])
+        print("Basic server in Python that provides the necessary messaging for playing bulls and cows game.\n\n")
+        print("Without PORT, or when PORT is -, uses the default port 8888")
+
+    if(len(sys.argv)==2):
+        if(string.isnumeric(sys.argv[2])):
+            port = int(sys.argv[2])
+        elif(sys.argv[2]=="-"):
+            port = 8888
+        else:
+            print_help()
+            sys.exit(0)
+    elif(len(sys.argv)==1):
+        port = 8888
+    else:
+        print_help()
+        sys.exit(0)
+
+    newServer = Server(port)
     newServer.serve()
