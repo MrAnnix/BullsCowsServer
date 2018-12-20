@@ -259,6 +259,7 @@ class Server:
                                                 MESSAGE.ERROR)
 
     def serve(self):
+        print("Server running on port %d" % self.p_sock.getsockname()[1])
         try:
             while True:
                 self.events = self.sel.select(timeout=None)
@@ -292,15 +293,16 @@ class Server:
 
 if __name__ == '__main__':
     def print_help():
-        print("Usage: python3 %s [PORT]\n" % sys.argv[1])
-        print("Basic server in Python that provides the necessary messaging for playing bulls and cows game.\n\n")
+        print("Usage: python3 %s [PORT]" % sys.argv[0])
+        print("Basic server in Python that provides the necessary messaging for playing bulls and cows game.\n")
         print("Without PORT, or when PORT is -, uses the default port 8888")
 
     if(len(sys.argv)==2):
-        if (sys.argv[2] == "-"):
+        port = ''.join(sys.argv[1])
+        if(port.isnumeric()):
+            port = int(port)
+        elif(port=="-"):
             port = 8888
-        elif(string.isnumeric(sys.argv[2])):
-            port = int(sys.argv[2])
         else:
             print_help()
             sys.exit(0)
