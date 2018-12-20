@@ -297,10 +297,10 @@ if __name__ == '__main__':
         print("Without PORT, or when PORT is -, uses the default port 8888")
 
     if(len(sys.argv)==2):
-        if(string.isnumeric(sys.argv[2])):
-            port = int(sys.argv[2])
-        elif(sys.argv[2]=="-"):
+        if (sys.argv[2] == "-"):
             port = 8888
+        elif(string.isnumeric(sys.argv[2])):
+            port = int(sys.argv[2])
         else:
             print_help()
             sys.exit(0)
