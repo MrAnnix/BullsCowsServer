@@ -1,9 +1,11 @@
 Created by:
-Pérez Ciudad, María (100346865)
+Pérez Ciudad, María, 100346865
 
-San Martín Aniceto, Raúl (100346895)
+San Martín Aniceto, Raúl, 100346895
 
-Status: Full working
+Status: FULL WORKING
+  TestSingleClientConnection, TestMultipleClientConnection, TestSingleClientLogin, TestMultipleClientLogin, TestSingleClientLoginQuit,
+  TestMultipleClientLoginQuit, TestSingleClientNewGame, TestMultipleClientNewGame, TestSingleClientGame, TestMultipleClientGame
 
 Instrucciones:
   Usage: python3 server.py [PORT]
